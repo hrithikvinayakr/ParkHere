@@ -1,0 +1,9 @@
+# Expo/React Native packages must be upgraded together with `npx expo install --fix`,
+# so Dependabot only watches GitHub Actions. Security alerts for npm still arrive
+# through GitHub's Dependabot alerts.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
