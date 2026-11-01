@@ -7,3 +7,4 @@ ios
 pnpm-lock.yaml
 packages/shared/src/database.types.ts
 supabase/.temp
+apps/mobile/expo-env.d.ts

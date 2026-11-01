@@ -1,4 +1,5 @@
 -- Booking lifecycle and access-control tests. Run with: pnpm db:test
+-- The database may already contain seed data, so counts are scoped to this file's fixtures.
 begin;
 create extension if not exists pgtap with schema extensions;
 
@@ -28,7 +29,10 @@ insert into public.spot_access (spot_id, location, address) values
 update public.spots set status = 'active';
 
 select is(
-  (select count(*) from public.profiles),
+  (select count(*) from public.profiles
+   where id in ('11111111-1111-1111-1111-111111111111',
+                '22222222-2222-2222-2222-222222222222',
+                '33333333-3333-3333-3333-333333333333')),
   3::bigint,
   'a profile is created for every new user'
 );
@@ -50,7 +54,8 @@ set local role authenticated;
 set local request.jwt.claims to '{"sub": "22222222-2222-2222-2222-222222222222", "role": "authenticated"}';
 
 select is(
-  (select count(*) from public.nearby_spots(12.9716, 77.5946)),
+  (select count(*) from public.nearby_spots(12.9716, 77.5946)
+   where id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002')),
   2::bigint,
   'driver finds both nearby spots'
 );
@@ -109,7 +114,8 @@ select is(
 
 select is(
   (select count(*) from public.nearby_spots(12.9716, 77.5946, 2000,
-                                            now() + interval '30 minutes', now() + interval '90 minutes')),
+                                            now() + interval '30 minutes', now() + interval '90 minutes')
+   where id in ('aaaaaaaa-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000002')),
   1::bigint,
   'a booked spot is excluded from search for overlapping times'
 );
