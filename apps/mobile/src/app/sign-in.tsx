@@ -2,11 +2,12 @@ import { emailSchema, otpSchema } from '@parkhere/shared';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+import { DevPasswordSignIn } from '@/components/dev-password-sign-in';
 import { Body, Button, ErrorText, Screen, TextField, Title } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { spacing } from '@/theme';
 
-type Step = { name: 'email' } | { name: 'code'; email: string };
+type Step = { name: 'email' } | { name: 'code'; email: string } | { name: 'dev-password' };
 
 export default function SignInScreen() {
   const [step, setStep] = useState<Step>({ name: 'email' });
@@ -77,6 +78,25 @@ export default function SignInScreen() {
             />
             <ErrorText>{error}</ErrorText>
             <Button label="Send code" onPress={sendCode} loading={loading} />
+            {__DEV__ ? (
+              <Button
+                label="Developer sign-in (password)"
+                variant="secondary"
+                onPress={() => {
+                  setError(null);
+                  setStep({ name: 'dev-password' });
+                }}
+              />
+            ) : null}
+          </View>
+        ) : step.name === 'dev-password' ? (
+          <View style={styles.form}>
+            <DevPasswordSignIn />
+            <Button
+              label="Back to email code"
+              variant="secondary"
+              onPress={() => setStep({ name: 'email' })}
+            />
           </View>
         ) : (
           <View style={styles.form}>
