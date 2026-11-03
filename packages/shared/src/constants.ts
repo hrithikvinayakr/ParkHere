@@ -21,3 +21,4 @@ export const SEARCH_DEFAULT_RADIUS_M = 2000;
 export const SEARCH_MAX_RADIUS_M = 10_000;
 
 export const SPOT_PHOTOS_BUCKET = 'spot-photos';
+export const MAX_SPOT_PHOTOS = 6;

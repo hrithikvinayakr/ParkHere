@@ -4,12 +4,21 @@ import {
   VEHICLE_TYPE_LABELS,
   type Coordinates,
 } from '@parkhere/shared';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { useMySpots, useNearbySpots } from '@/api/spots';
-import { Body, Card, ErrorText, Screen, Title } from '@/components/ui';
+import { Body, Button, Card, ErrorText, Screen, Title } from '@/components/ui';
 import { useAppMode } from '@/stores/app-mode';
-import { spacing } from '@/theme';
+import { radius, spacing, useTheme } from '@/theme';
 
 // Placeholder search centre (MG Road, Bengaluru) until device location and the
 // map screen are added in the "Driver search and map" milestone.
@@ -56,7 +65,16 @@ function NearbySpots() {
   );
 }
 
+const SPOT_STATUS_LABELS = {
+  active: 'Live',
+  paused: 'Paused',
+  draft: 'Draft',
+  suspended: 'Suspended',
+};
+
 function MySpots() {
+  const router = useRouter();
+  const colors = useTheme();
   const { data, error, isPending, refetch, isRefetching } = useMySpots();
 
   return (
@@ -66,22 +84,48 @@ function MySpots() {
       contentContainerStyle={styles.list}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />}
       ListHeaderComponent={
-        <View>
+        <View style={styles.header}>
           <Title>My spots</Title>
           <ErrorText>{error ? toUserMessage(error) : null}</ErrorText>
+          <Button label="List a spot" onPress={() => router.push('/spots/new')} />
         </View>
       }
       ListEmptyComponent={
-        isPending ? <ActivityIndicator /> : <Body muted>You haven&apos;t listed a spot yet.</Body>
+        isPending ? (
+          <ActivityIndicator />
+        ) : (
+          <Body muted>
+            You haven&apos;t listed a spot yet. List your driveway, garage or lot to start earning.
+          </Body>
+        )
       }
       renderItem={({ item }) => (
-        <Card>
-          <Body>{item.title}</Body>
-          <Body muted>
-            {item.status} · {formatPaise(item.hourly_rate_paise)}/hr
-            {item.rating_avg !== null ? ` · ★ ${item.rating_avg} (${item.rating_count})` : ''}
-          </Body>
-        </Card>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push({ pathname: '/spots/[id]', params: { id: item.id } })}
+          style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}
+        >
+          <Card>
+            <View style={styles.spotRow}>
+              {item.coverUrl ? (
+                <Image
+                  source={{ uri: item.coverUrl }}
+                  style={[styles.thumb, { backgroundColor: colors.border }]}
+                  contentFit="cover"
+                />
+              ) : (
+                <View style={[styles.thumb, { backgroundColor: colors.border }]} />
+              )}
+              <View style={styles.spotText}>
+                <Body>{item.title}</Body>
+                <Body muted>
+                  {SPOT_STATUS_LABELS[item.status]} · {formatPaise(item.hourly_rate_paise)}/hr
+                  {item.rating_avg !== null ? ` · ★ ${item.rating_avg} (${item.rating_count})` : ''}
+                </Body>
+              </View>
+            </View>
+          </Card>
+        </Pressable>
       )}
     />
   );
@@ -89,4 +133,8 @@ function MySpots() {
 
 const styles = StyleSheet.create({
   list: { gap: spacing.md, paddingBottom: spacing.xl },
+  header: { gap: spacing.sm },
+  spotRow: { flexDirection: 'row', gap: spacing.md, alignItems: 'center' },
+  thumb: { width: 64, height: 64, borderRadius: radius.md },
+  spotText: { flex: 1, gap: spacing.xs },
 });

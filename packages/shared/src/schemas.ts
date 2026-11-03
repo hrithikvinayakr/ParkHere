@@ -31,6 +31,24 @@ export const coordinatesSchema = z.object({
 });
 export type Coordinates = z.infer<typeof coordinatesSchema>;
 
+/** "HH:MM" on a 24-hour clock; "24:00" means end of day. */
+export const clockTimeSchema = z
+  .string()
+  .regex(/^(([01]\d|2[0-3]):[0-5]\d|24:00)$/, 'Use 24-hour time, e.g. 08:00');
+
+/** One weekly opening window (0 = Sunday). Matches public.availability_rules. */
+export const availabilityRuleSchema = z
+  .object({
+    weekday: z.number().int().min(0).max(6),
+    start: clockTimeSchema,
+    end: clockTimeSchema,
+  })
+  .refine(({ start, end }) => end > start, {
+    message: 'Closing time must be after opening time',
+    path: ['end'],
+  });
+export type AvailabilityRule = z.infer<typeof availabilityRuleSchema>;
+
 export const spotInputSchema = z.object({
   title: z.string().trim().min(3).max(80),
   description: z.string().trim().max(1000).optional(),
@@ -46,6 +64,8 @@ export const spotInputSchema = z.object({
   location: coordinatesSchema,
   address: z.string().trim().min(5).max(300),
   accessInstructions: z.string().trim().max(1000).optional(),
+  /** Empty means open 24/7. */
+  availability: z.array(availabilityRuleSchema).max(21),
 });
 export type SpotInput = z.infer<typeof spotInputSchema>;
 

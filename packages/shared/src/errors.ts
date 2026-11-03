@@ -3,6 +3,11 @@
 export const API_ERROR_MESSAGES = {
   NOT_AUTHENTICATED: 'Please sign in again.',
   INVALID_COORDINATES: 'That location looks invalid.',
+  INVALID_AVAILABILITY: 'Check the opening hours: closing time must be after opening time.',
+  INVALID_SPOT_DETAILS: 'Some spot details are invalid. Check the form and try again.',
+  SPOT_NOT_FOUND: "We couldn't find that spot.",
+  SPOT_HAS_BOOKINGS: "This spot has booking history, so it can't be deleted. Pause it instead.",
+  TOO_MANY_PHOTOS: 'A spot can have up to 6 photos.',
   INVALID_TIME_RANGE: 'The end time must be after the start time.',
   INVALID_DURATION: 'Bookings must be between 30 minutes and 24 hours.',
   INVALID_START_TIME: 'Choose a start time between now and 14 days ahead.',

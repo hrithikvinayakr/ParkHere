@@ -21,7 +21,26 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-image",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "ParkHere uses your location to show parking nearby and to pin your spot on the map."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ParkHere needs your photos so you can add pictures of your parking spot.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }

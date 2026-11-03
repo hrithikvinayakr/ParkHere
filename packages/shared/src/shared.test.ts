@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  availabilityRuleSchema,
   bookingTotalPaise,
   formatPaise,
   parseTimeRange,
@@ -48,5 +49,19 @@ describe('parseTimeRange', () => {
     const { start, end } = parseTimeRange('["2026-10-26 10:00:00+00","2026-10-26 12:30:00+05:30")');
     expect(start.toISOString()).toBe('2026-10-26T10:00:00.000Z');
     expect(end.toISOString()).toBe('2026-10-26T07:00:00.000Z');
+  });
+});
+
+describe('availabilityRuleSchema', () => {
+  it('accepts end-of-day closing', () => {
+    expect(
+      availabilityRuleSchema.safeParse({ weekday: 1, start: '08:00', end: '24:00' }).success,
+    ).toBe(true);
+  });
+
+  it('rejects closing before opening', () => {
+    expect(
+      availabilityRuleSchema.safeParse({ weekday: 1, start: '20:00', end: '08:00' }).success,
+    ).toBe(false);
   });
 });

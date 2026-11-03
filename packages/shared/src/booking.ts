@@ -37,9 +37,11 @@ export function isActiveBooking(status: BookingStatus): boolean {
  * Parses a Postgres tstzrange such as `["2026-10-26 10:00:00+00","2026-10-26 12:00:00+00")`.
  * Hermes cannot parse Postgres timestamps directly, so they are normalised to ISO 8601.
  */
-export function parseTimeRange(range: string): { start: Date; end: Date } {
-  const match = /^[[(]"?([^",]+)"?,"?([^",)\]]+)"?[)\]]$/.exec(range.trim());
-  if (!match?.[1] || !match[2]) throw new Error(`Invalid time range: ${range}`);
+export function parseTimeRange(range: unknown): { start: Date; end: Date } {
+  // Generated database types expose range columns as `unknown`.
+  const match =
+    typeof range === 'string' ? /^[[(]"?([^",]+)"?,"?([^",)\]]+)"?[)\]]$/.exec(range.trim()) : null;
+  if (!match?.[1] || !match[2]) throw new Error(`Invalid time range: ${String(range)}`);
   const toIso = (value: string) => value.replace(' ', 'T').replace(/([+-]\d{2})$/, '$1:00');
   return { start: new Date(toIso(match[1])), end: new Date(toIso(match[2])) };
 }

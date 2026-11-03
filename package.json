@@ -16,7 +16,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
-    "db:types": "supabase gen types typescript --local > packages/shared/src/database.types.ts"
+    "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts",
+    "db:types:linked": "supabase gen types typescript --linked --schema public > packages/shared/src/database.types.ts"
   },
   "devDependencies": {
     "prettier": "^3.9.10",

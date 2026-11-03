@@ -1,27 +1,22 @@
-import { Tabs } from 'expo-router';
+import { Stack } from 'expo-router';
 
-import { useAppMode } from '@/stores/app-mode';
 import { useTheme } from '@/theme';
 
-export default function AppTabsLayout() {
+export default function AppStackLayout() {
   const colors = useTheme();
-  const mode = useAppMode((state) => state.mode);
 
   return (
-    <Tabs
+    <Stack
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{ title: mode === 'driver' ? 'Find parking' : 'My spots' }}
-      />
-      <Tabs.Screen name="bookings" options={{ title: 'Bookings' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
-    </Tabs>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="spots/new" options={{ title: 'List a spot' }} />
+      <Stack.Screen name="spots/[id]" options={{ title: 'Manage spot' }} />
+      <Stack.Screen name="spots/[id]/edit" options={{ title: 'Edit spot' }} />
+    </Stack>
   );
 }
