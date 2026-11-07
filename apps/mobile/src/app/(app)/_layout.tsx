@@ -17,6 +17,7 @@ export default function AppStackLayout() {
       <Stack.Screen name="spots/new" options={{ title: 'List a spot' }} />
       <Stack.Screen name="spots/[id]" options={{ title: 'Manage spot' }} />
       <Stack.Screen name="spots/[id]/edit" options={{ title: 'Edit spot' }} />
+      <Stack.Screen name="parking/[id]" options={{ title: 'Parking spot' }} />
     </Stack>
   );
 }

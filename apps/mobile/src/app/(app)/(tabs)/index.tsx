@@ -1,9 +1,4 @@
-import {
-  formatPaise,
-  toUserMessage,
-  VEHICLE_TYPE_LABELS,
-  type Coordinates,
-} from '@parkhere/shared';
+import { formatPaise, toUserMessage } from '@parkhere/shared';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import {
@@ -15,53 +10,20 @@ import {
   View,
 } from 'react-native';
 
-import { useMySpots, useNearbySpots } from '@/api/spots';
+import { useMySpots } from '@/api/spots';
 import { Body, Button, Card, ErrorText, Screen, Title } from '@/components/ui';
+import { DriverMap } from '@/features/search/driver-map';
 import { useAppMode } from '@/stores/app-mode';
 import { radius, spacing, useTheme } from '@/theme';
 
-// Placeholder search centre (MG Road, Bengaluru) until device location and the
-// map screen are added in the "Driver search and map" milestone.
-const DEFAULT_CENTER: Coordinates = { lat: 12.9716, lng: 77.5946 };
-
 export default function HomeScreen() {
   const mode = useAppMode((state) => state.mode);
-  return <Screen>{mode === 'driver' ? <NearbySpots /> : <MySpots />}</Screen>;
-}
-
-function NearbySpots() {
-  const { data, error, isPending, refetch, isRefetching } = useNearbySpots(DEFAULT_CENTER);
-
+  // The driver map is full-bleed; the host list uses the padded screen layout.
+  if (mode === 'driver') return <DriverMap />;
   return (
-    <FlatList
-      data={data ?? []}
-      keyExtractor={(spot) => spot.id}
-      contentContainerStyle={styles.list}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />}
-      ListHeaderComponent={
-        <View>
-          <Title>Parking near you</Title>
-          <ErrorText>{error ? toUserMessage(error) : null}</ErrorText>
-        </View>
-      }
-      ListEmptyComponent={
-        isPending ? <ActivityIndicator /> : <Body muted>No spots nearby right now.</Body>
-      }
-      renderItem={({ item }) => (
-        <Card>
-          <Body>{item.title}</Body>
-          <Body muted>
-            {item.area_label} · {(item.distance_m / 1000).toFixed(1)} km away
-          </Body>
-          <Body>
-            {formatPaise(item.hourly_rate_paise)}/hr ·{' '}
-            {item.instant_book ? 'Instant book' : 'Offers'}
-            {' · '}
-            {item.vehicle_types.map((type) => VEHICLE_TYPE_LABELS[type]).join(', ')}
-          </Body>
-        </Card>
-      )}
-    />
+    <Screen>
+      <MySpots />
+    </Screen>
   );
 }
 

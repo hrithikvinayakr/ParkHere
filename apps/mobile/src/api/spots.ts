@@ -1,40 +1,87 @@
 import {
-  SEARCH_DEFAULT_RADIUS_M,
   SPOT_PHOTOS_BUCKET,
   vehicleTypeSchema,
   type Coordinates,
   type SpotInput,
   type SpotStatus,
+  type VehicleType,
 } from '@parkhere/shared';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 
 import { photoUrl, syncSpotPhotos, type SpotPhoto } from '@/features/spots/photos';
 import { supabase } from '@/lib/supabase';
 import { useUserId } from '@/providers/auth-provider';
 
+export type SearchArea = { center: Coordinates; radiusM: number };
+
 export const spotKeys = {
   all: ['spots'] as const,
-  nearby: (center: Coordinates, radiusM: number) =>
-    [...spotKeys.all, 'nearby', center.lat, center.lng, radiusM] as const,
+  nearby: (area: SearchArea, vehicleType: VehicleType | null) =>
+    [
+      ...spotKeys.all,
+      'nearby',
+      area.center.lat,
+      area.center.lng,
+      area.radiusM,
+      vehicleType,
+    ] as const,
   mine: (userId: string) => [...spotKeys.all, 'mine', userId] as const,
   detail: (spotId: string) => [...spotKeys.all, 'detail', spotId] as const,
+  public: (spotId: string) => [...spotKeys.all, 'public', spotId] as const,
 };
 
-export function useNearbySpots(center: Coordinates, radiusM = SEARCH_DEFAULT_RADIUS_M) {
+export function useNearbySpots(area: SearchArea, vehicleType: VehicleType | null) {
   return useQuery({
-    queryKey: spotKeys.nearby(center, radiusM),
+    queryKey: spotKeys.nearby(area, vehicleType),
     queryFn: async () => {
       const { data, error } = await supabase.rpc('nearby_spots', {
-        p_lat: center.lat,
-        p_lng: center.lng,
-        p_radius_m: radiusM,
+        p_lat: area.center.lat,
+        p_lng: area.center.lng,
+        p_radius_m: area.radiusM,
+        ...(vehicleType ? { p_vehicle_type: vehicleType } : {}),
       });
       if (error) throw error;
-      return data;
+      return data.map(({ cover_photo_path, ...spot }) => ({
+        ...spot,
+        coverUrl: cover_photo_path ? photoUrl(cover_photo_path) : null,
+      }));
+    },
+    // Keep showing the previous pins while the map moves to a new area.
+    placeholderData: keepPreviousData,
+  });
+}
+
+export type NearbySpot = NonNullable<ReturnType<typeof useNearbySpots>['data']>[number];
+
+const publicSpotJsonSchema = z.object({
+  availability: z.array(z.object({ weekday: z.number(), start: z.string(), end: z.string() })),
+  photo_paths: z.array(z.string()),
+  vehicle_types: z.array(vehicleTypeSchema),
+});
+
+/** A spot as drivers see it: rounded location, no address. */
+export function usePublicSpot(spotId: string) {
+  return useQuery({
+    queryKey: spotKeys.public(spotId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('get_public_spot', { p_spot_id: spotId })
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('SPOT_NOT_FOUND');
+      const json = publicSpotJsonSchema.parse(data);
+      return {
+        ...data,
+        availability: json.availability,
+        vehicle_types: json.vehicle_types,
+        photoUrls: json.photo_paths.map(photoUrl),
+      };
     },
   });
 }
+
+export type PublicSpot = NonNullable<ReturnType<typeof usePublicSpot>['data']>;
 
 export function useMySpots() {
   const userId = useUserId();

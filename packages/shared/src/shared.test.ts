@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   availabilityRuleSchema,
   bookingTotalPaise,
+  distanceMeters,
+  formatDistance,
   formatPaise,
   parseTimeRange,
   plateNumberSchema,
@@ -63,5 +65,19 @@ describe('availabilityRuleSchema', () => {
     expect(
       availabilityRuleSchema.safeParse({ weekday: 1, start: '20:00', end: '08:00' }).success,
     ).toBe(false);
+  });
+});
+
+describe('geo', () => {
+  it('measures city distances', () => {
+    // MG Road to Indiranagar 100 Feet Road is roughly 5 km
+    const meters = distanceMeters({ lat: 12.9716, lng: 77.5946 }, { lat: 12.9784, lng: 77.6408 });
+    expect(meters).toBeGreaterThan(4900);
+    expect(meters).toBeLessThan(5100);
+  });
+
+  it('formats distances for display', () => {
+    expect(formatDistance(342)).toBe('340 m');
+    expect(formatDistance(1234)).toBe('1.2 km');
   });
 });
